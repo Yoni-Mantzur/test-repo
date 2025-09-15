@@ -1,0 +1,18 @@
+pipeline {
+  agent any
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm // Multibranch automatically knows the repo and branch
+      }
+    }
+    stage('Print Envs') {
+      steps {
+        sh '''
+          echo "=== Jenkins Environment Variables ==="
+          printenv | sort
+        '''
+      }
+    }
+  }
+}
