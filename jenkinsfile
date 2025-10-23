@@ -16,6 +16,8 @@ pipeline {
     GDN_MDC_CLI_CLIENT_ID    = '42e28c99-6d63-4202-b7fd-253687bab74a'
     DfdBackendServiceEnvironment = 'PPE'
     GDN_NUGET_SOURCE_FEED_OVERRIDE = 'https://pkgs.dev.azure.com/msdoustest/msdo/_packaging/msdotestfeed2/nuget/v3/index.json'
+    DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+
   }
 
   stages {
