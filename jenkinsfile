@@ -19,6 +19,15 @@ pipeline {
   }
 
   stages {
+
+stage('Check OS') {
+  steps {
+    sh '''
+      uname -a
+      cat /etc/os-release || true
+    '''
+  }
+}
     stage('Checkout') {
       steps {
         checkout scm
