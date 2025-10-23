@@ -20,13 +20,59 @@ pipeline {
 
   stages {
 
-stage('Check OS') {
+stage('Install docker & rpm if needed') {
   steps {
     sh '''
-      uname -a
-      cat /etc/os-release || true
+      set -e
+
+      echo "=== Checking docker CLI ==="
+      if ! command -v docker >/dev/null 2>&1; then
+        echo "Docker not found — installing..."
+
+        # Debian dependencies
+        apt-get update -y
+        apt-get install -y ca-certificates curl gnupg lsb-release
+
+        # Docker official repo
+        install -m 0755 -d /etc/apt/keyrings
+        curl -fsSL https://download.docker.com/linux/debian/gpg | \
+          gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+        chmod a+r /etc/apt/keyrings/docker.gpg
+
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+          https://download.docker.com/linux/debian \
+          $(lsb_release -cs) stable" \
+          > /etc/apt/sources.list.d/docker.list
+
+        apt-get update -y
+        apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+        # enable docker daemon if systemd available
+        if command -v systemctl >/dev/null 2>&1; then
+          systemctl enable --now docker || true
+        fi
+
+        # grant jenkins user (if exists)
+        if id jenkins >/dev/null 2>&1; then
+          usermod -aG docker jenkins || true
+        fi
+      else
+        echo "Docker already installed."
+      fi
+
+      echo "=== Checking rpm ==="
+      if ! command -v rpm >/dev/null 2>&1; then
+        echo "rpm not found — installing..."
+        apt-get update -y
+        apt-get install -y rpm
+      else
+        echo "rpm already installed."
+      fi
     '''
   }
+}
+
 }
     stage('Checkout') {
       steps {
