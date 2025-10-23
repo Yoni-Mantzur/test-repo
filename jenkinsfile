@@ -72,8 +72,6 @@ stage('Install docker & rpm if needed') {
     '''
   }
 }
-
-}
     stage('Checkout') {
       steps {
         checkout scm
