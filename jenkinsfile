@@ -3,8 +3,8 @@ pipeline {
 
   environment {
     // Replace these with your values
-    ACR_LOGIN_SERVER = 'myregistry.azurecr.io'   // <-- set your ACR login server
-    IMAGE_NAME       = 'myapp'                   // <-- set your image name
+    ACR_LOGIN_SERVER = 'e2ecrdev.azurecr.io'   // <-- set your ACR login server
+    IMAGE_NAME       = 'yonitest'                   // <-- set your image name
 
     DOCKER_BUILDKIT  = '1'
 
