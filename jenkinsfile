@@ -1,18 +1,92 @@
 pipeline {
   agent any
+
+  environment {
+    // Replace these with your values
+    ACR_LOGIN_SERVER = 'myregistry.azurecr.io'   // <-- set your ACR login server
+    IMAGE_NAME       = 'myapp'                   // <-- set your image name
+
+    DOCKER_BUILDKIT  = '1'
+
+    // Secret text credential (you said you already added this)
+    GDN_MDC_CLI_CLIENT_SECRET = credentials('gdn-client-secret')
+
+    // Static values you asked to export (literal values)
+    GDN_MDC_CLI_TENANT_ID    = 'dad46ef7-083d-488a-bd4b-8926fc7f83a1'
+    GDN_MDC_CLI_CLIENT_ID    = '42e28c99-6d63-4202-b7fd-253687bab74a'
+    DfdBackendServiceEnvironment = 'PPE'
+    GDN_NUGET_SOURCE_FEED_OVERRIDE = 'https://pkgs.dev.azure.com/msdoustest/msdo/_packaging/msdotestfeed2/nuget/v3/index.json'
+  }
+
   stages {
     stage('Checkout') {
       steps {
-        checkout scm // Multibranch automatically knows the repo and branch
+        checkout scm
+        sh 'git rev-parse --short=7 HEAD > .gitsha'
       }
     }
-    stage('Print Envs') {
+
+    stage('Compute Tag & Build') {
       steps {
+        script { env.IMAGE_TAG = readFile('.gitsha').trim() }
         sh '''
-          echo "=== Jenkins Environment Variables ==="
-          printenv | sort
+          echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
+          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
         '''
       }
+    }
+
+    stage('Download Defender Scanner') {
+      steps {
+        // ensure the binary is downloaded
+        sh '''
+          echo "Download Defender tool"
+          curl -fsSL -o defender https://cli.dfd.security.stage.azure-test.net/public/latest/Defender_linux-x64
+          chmod +x defender
+        '''
+      }
+    }
+
+    stage('Scan Image') {
+      steps {
+        // Export the variables so the scanner process sees them
+        sh '''
+          echo "Exporting environment variables for Defender scan..."
+          export GDN_MDC_CLI_TENANT_ID=${GDN_MDC_CLI_TENANT_ID}
+          export GDN_MDC_CLI_CLIENT_ID=${GDN_MDC_CLI_CLIENT_ID}
+          export GDN_MDC_CLI_CLIENT_SECRET=${GDN_MDC_CLI_CLIENT_SECRET}
+          export DfdBackendServiceEnvironment=${DfdBackendServiceEnvironment}
+          export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
+
+          echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
+          ./defender scan image ${IMAGE_NAME}:${IMAGE_TAG}
+        '''
+      }
+    }
+
+    stage('Push to ACR') {
+      steps {
+        // Use withCredentials for username/password style credential
+        withCredentials([usernamePassword(
+          credentialsId: 'acr-creds',
+          usernameVariable: 'ACR_USER',
+          passwordVariable: 'ACR_PASS'
+        )]) {
+          sh '''
+            echo "$ACR_PASS" | docker login ${ACR_LOGIN_SERVER} -u "$ACR_USER" --password-stdin
+            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            docker logout ${ACR_LOGIN_SERVER} || true
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      // cleanup to save disk
+      sh 'docker image prune -f || true'
     }
   }
 }
