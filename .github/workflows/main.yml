@@ -21,4 +21,40 @@ jobs:
         id: repo
         env:
           REPO: ${{ github.repository }}
-          GH_TOKEN: ${{ secrets.GITHUB_
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          curl -sS \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$REPO" > repo.json
+
+          # Extract numeric IDs
+          echo "repo_id=$(jq '.id' repo.json)" >> "$GITHUB_OUTPUT"
+          echo "owner_id=$(jq '.owner.id' repo.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Print IDs
+        run: |
+          echo "Repository ID: ${{ steps.repo.outputs.repo_id }}"
+          echo "Owner ID: ${{ steps.repo.outputs.owner_id }}"
+
+      - name: Export IDs to environment for subsequent steps
+        run: |
+          echo "GITHUB_REPOSITORY_ID=${{ steps.repo.outputs.repo_id }}" >> "$GITHUB_ENV"
+          echo "GITHUB_REPOSITORY_OWNER_ID=${{ steps.repo.outputs.owner_id }}" >> "$GITHUB_ENV"
+
+      - name: Demonstrate using env vars later in the same job
+        run: |
+          echo "From \$GITHUB_ENV -> GITHUB_REPOSITORY_ID=$GITHUB_REPOSITORY_ID"
+          echo "From \$GITHUB_ENV -> GITHUB_REPOSITORY_OWNER_ID=$GITHUB_REPOSITORY_OWNER_ID"
+
+  use_ids_in_another_job:
+    name: Use IDs in another job
+    runs-on: ubuntu-latest
+    needs: fetch_ids
+    steps:
+      - name: Show job outputs from previous job
+        run: |
+          echo "Repo ID (from job output): ${{ needs.fetch_ids.outputs.repository_id }}"
+          echo "Owner ID (from job output): ${{ needs.fetch_ids.outputs.owner_id }}"
