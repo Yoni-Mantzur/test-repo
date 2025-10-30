@@ -81,6 +81,14 @@ stage('Install docker & rpm if needed') {
       }
     }
 
+    stage('Env') {
+            steps {
+                sh 'printenv | grep GIT_'
+            }
+    }
+
+
+
     stage('Compute Tag & Build') {
       steps {
         script { env.IMAGE_TAG = readFile('.gitsha').trim() }
@@ -114,7 +122,7 @@ stage('Install docker & rpm if needed') {
           export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
 
           echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
-          ./defender scan image ${IMAGE_NAME}:${IMAGE_TAG}
+          ./defender scan image ${IMAGE_NAME}:${IMAGE_TAG} --scanner containers
         '''
       }
     }
