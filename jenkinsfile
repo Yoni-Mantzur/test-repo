@@ -110,22 +110,6 @@ stage('Install docker & rpm if needed') {
       }
     }
 
-    stage('Scan Image') {
-      steps {
-        // Export the variables so the scanner process sees them
-        sh '''
-          echo "Exporting environment variables for Defender scan..."
-          export GDN_MDC_CLI_TENANT_ID=${GDN_MDC_CLI_TENANT_ID}
-          export GDN_MDC_CLI_CLIENT_ID=${GDN_MDC_CLI_CLIENT_ID}
-          export GDN_MDC_CLI_CLIENT_SECRET=${GDN_MDC_CLI_CLIENT_SECRET}
-          export DfdBackendServiceEnvironment=${DfdBackendServiceEnvironment}
-          export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
-
-          echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
-          ./defender scan image ${IMAGE_NAME}:${IMAGE_TAG} --scanner containers
-        '''
-      }
-    }
 
     stage('Push to ACR') {
       steps {
@@ -144,6 +128,24 @@ stage('Install docker & rpm if needed') {
         }
       }
     }
+
+    stage('Scan Image') {
+      steps {
+        // Export the variables so the scanner process sees them
+        sh '''
+          echo "Exporting environment variables for Defender scan..."
+          export GDN_MDC_CLI_TENANT_ID=${GDN_MDC_CLI_TENANT_ID}
+          export GDN_MDC_CLI_CLIENT_ID=${GDN_MDC_CLI_CLIENT_ID}
+          export GDN_MDC_CLI_CLIENT_SECRET=${GDN_MDC_CLI_CLIENT_SECRET}
+          export DfdBackendServiceEnvironment=${DfdBackendServiceEnvironment}
+          export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
+
+          echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
+          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} --scanner containers
+        '''
+      }
+    }
+
   }
 
   post {
