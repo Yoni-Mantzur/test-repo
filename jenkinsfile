@@ -90,11 +90,10 @@ stage('Install docker & rpm if needed') {
     stage('Compute Tag & Build') {
       steps {
         sh '''
-          export $IMAGE_TAG = $(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16) 
-          echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
-          docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
+          echo "Building ${IMAGE_NAME}:${GIT_COMMIT}"
+          docker build -t ${IMAGE_NAME}:${GIT_COMMIT} -f Dockerfile .
             echo "Docker inspect after build"
-            docker inspect  ${IMAGE_NAME}:${IMAGE_TAG}
+            docker inspect  ${IMAGE_NAME}:${GIT_COMMIT}
         '''
       }
     }
@@ -121,16 +120,16 @@ stage('Install docker & rpm if needed') {
         )]) {
           sh '''
             echo "$ACR_PASS" | docker login ${ACR_LOGIN_SERVER} -u "$ACR_USER" --password-stdin
-            docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            docker tag ${IMAGE_NAME}:${GIT_COMMIT} ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT}
             echo "Docker inspect before push old tag"
-            docker inspect  ${IMAGE_NAME}:${IMAGE_TAG}
+            docker inspect  ${IMAGE_NAME}:${GIT_COMMIT}
             echo "Docker inspect before push new tag"
-            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
-            docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT}
+            docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT}
             echo "Docker inspect after push old tag"
-            docker inspect  ${IMAGE_NAME}:${IMAGE_TAG}
+            docker inspect  ${IMAGE_NAME}:${GIT_COMMIT}
             echo "Docker inspect after push new tag"
-            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT}
             docker logout ${ACR_LOGIN_SERVER} || true
           '''
         }
@@ -148,8 +147,8 @@ stage('Install docker & rpm if needed') {
           export DfdBackendServiceEnvironment=${DfdBackendServiceEnvironment}
           export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
 
-          echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
-          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} --scanner container
+          echo "Scanning image ${IMAGE_NAME}:${GIT_COMMIT}"
+          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT} --scanner container
         '''
       }
     }
