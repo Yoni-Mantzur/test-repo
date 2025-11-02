@@ -95,6 +95,8 @@ stage('Install docker & rpm if needed') {
         sh '''
           echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
           docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
+            echo "Docker inspect after build"
+            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
         '''
       }
     }
@@ -122,7 +124,15 @@ stage('Install docker & rpm if needed') {
           sh '''
             echo "$ACR_PASS" | docker login ${ACR_LOGIN_SERVER} -u "$ACR_USER" --password-stdin
             docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            echo "Docker inspect before push old tag"
+            docker inspect  ${IMAGE_NAME}:${IMAGE_TAG}
+            echo "Docker inspect before push new tag"
+            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
             docker push ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
+            echo "Docker inspect after push old tag"
+            docker inspect  ${IMAGE_NAME}:${IMAGE_TAG}
+            echo "Docker inspect after push new tag"
+            docker inspect  ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}
             docker logout ${ACR_LOGIN_SERVER} || true
           '''
         }
