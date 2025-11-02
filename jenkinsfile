@@ -141,7 +141,7 @@ stage('Install docker & rpm if needed') {
           export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
 
           echo "Scanning image ${IMAGE_NAME}:${IMAGE_TAG}"
-          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} --scanner containers
+          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} --scanner container
         '''
       }
     }
