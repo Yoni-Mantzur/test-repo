@@ -6,8 +6,6 @@ pipeline {
     ACR_LOGIN_SERVER = 'e2ecrdev.azurecr.io'   // <-- set your ACR login server
     IMAGE_NAME       = 'yonitest'                   // <-- set your image name
 
-    DOCKER_BUILDKIT  = '1'
-
     // Secret text credential (you said you already added this)
     GDN_MDC_CLI_CLIENT_SECRET = credentials('gdn-client-secret')
 
@@ -91,7 +89,7 @@ stage('Install docker & rpm if needed') {
 
     stage('Compute Tag & Build') {
       steps {
-        script { env.IMAGE_TAG = readFile('.gitsha').trim() }
+        script { env.IMAGE_TAG = $(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16) }
         sh '''
           echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
           docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
