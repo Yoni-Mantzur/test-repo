@@ -91,7 +91,7 @@ stage('Install docker & rpm if needed') {
       steps {
         sh '''
           echo "Building ${IMAGE_NAME}:${GIT_COMMIT}"
-          docker build -t ${IMAGE_NAME}:${GIT_COMMIT} -f Dockerfile .
+          DOCKER_BUILDKIT=1 docker build -t ${IMAGE_NAME}:${GIT_COMMIT} -f Dockerfile .
             echo "Docker inspect after build"
             docker inspect  ${IMAGE_NAME}:${GIT_COMMIT}
         '''
