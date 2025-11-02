@@ -89,8 +89,9 @@ stage('Install docker & rpm if needed') {
 
     stage('Compute Tag & Build') {
       steps {
-        script { env.IMAGE_TAG = $(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16) }
+        script { }
         sh '''
+          export $IMAGE_TAG = $(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 16) 
           echo "Building ${IMAGE_NAME}:${IMAGE_TAG}"
           docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -f Dockerfile .
             echo "Docker inspect after build"
