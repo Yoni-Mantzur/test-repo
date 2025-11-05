@@ -148,7 +148,7 @@ stage('Install docker & rpm if needed') {
           export GDN_NUGET_SOURCE_FEED_OVERRIDE="${GDN_NUGET_SOURCE_FEED_OVERRIDE}"
 
           echo "Scanning image ${IMAGE_NAME}:${GIT_COMMIT}"
-          ./defender scan image ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT} --scanner container
+          ./defender scan image --update-configs ${ACR_LOGIN_SERVER}/${IMAGE_NAME}:${GIT_COMMIT}
         '''
       }
     }
