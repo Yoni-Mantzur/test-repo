@@ -7,7 +7,7 @@ pipeline {
     IMAGE_NAME       = 'yonitest'                   // <-- set your image name
 
     // Secret text credential (you said you already added this)
-    GDN_MDC_CLI_CLIENT_SECRET = credentials('gdn-client-secret')
+    GDN_MDC_CLI_CLIENT_SECRET = credentials('gdn-client-secret-prod')
 
     // Static values you asked to export (literal values)
     GDN_MDC_CLI_TENANT_ID    = 'c34f6697-65ed-4d64-adb7-4ece18f69b2b'
@@ -114,7 +114,7 @@ stage('Install docker & rpm if needed') {
       steps {
         // Use withCredentials for username/password style credential
         withCredentials([usernamePassword(
-          credentialsId: 'acr-creds',
+          credentialsId: 'acr-creds-prod',
           usernameVariable: 'ACR_USER',
           passwordVariable: 'ACR_PASS'
         )]) {
