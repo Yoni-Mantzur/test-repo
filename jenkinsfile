@@ -24,7 +24,7 @@ stage('Install docker & rpm if needed') {
   steps {
     sh '''
       set -e
-
+      rm -rf /tmp
       echo "=== Checking docker CLI ==="
       if ! command -v docker >/dev/null 2>&1; then
         echo "Docker not found — installing..."
